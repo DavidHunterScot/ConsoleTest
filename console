@@ -1,0 +1,70 @@
+<?php
+
+$namespace = "";
+$function = "";
+$params = [];
+
+// Check for args and that there is more than one.
+if(is_array($argv) && $argc > 1) {
+	// Loop through each arg.
+	for($i = 0; $i < $argc; $i++) {
+		// Check if current arg is first arg and continue (ignore it).
+		if($i == 0)
+			continue;
+		
+		// If there is a second arg (index 1), this will be the requested function name.
+		// Check that the current arg is 1.
+		if($i == 1) {
+			// Differenciate between functions in the global namespace and functions that have their own namespace.
+			// Check to see if the arg contains a forward slash.
+			if(strstr($argv[1], "::")) {
+				// Contains slash, so has a namespace.
+				// Explode the arg to separate the namespace from the function name.
+				$func_parts = explode("::", $argv[1]);
+				
+				// Save the first part (index 0) as the namespace.
+				$namespace = $func_parts[0];
+				
+				// Save the second part (index 1) as the function.
+				$function = $func_parts[1];
+				
+				// Continue onto the next iteration of the loop.
+				continue;
+			}
+			
+			// Save to variable for later.
+			$function = $argv[$i];
+			
+			// Continue onto the next iteration of the loop.
+			continue;
+		}
+		
+		// Any further arguments are now considered parameters for the requested function.
+		// Add them to the params array.
+		array_push($params, $argv[$i]);
+	}
+	
+	// Now that the provided information has been processed, let's put it to action.
+	
+	// Check if there is a namespace and that a file with the same name as the namespace exists.
+	if($namespace != "" && file_exists("namespaces/" . $namespace . ".php")) {
+		// File exists so valid namespace.
+		
+		// Require in that file.
+		require_once "namespaces/" . $namespace . ".php";
+	} else {
+		// No valid namespace. Require in functions file as global namespace.
+		require_once "functions.php";
+	}
+	
+	// Check that the functions variable is not blank (means a valid function has been requested).
+	if($function != "" && function_exists($function)) {
+		// Call the requested function and pass in the params array.
+		call_user_func_array($function, $params);
+	} else {
+		// Requested function does not exist. Display message stating so.
+		echo "Requested function \"" . $function . "\" does not exist!";
+	}
+} else {
+	echo "No args!";
+}
